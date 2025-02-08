@@ -1,0 +1,350 @@
+-- 1. Som användare vill jag kunna registrera mig för att skapa ett konto.
+
+INSERT INTO "användareuppgifter" (id,förnamn, efternamn, passnummer, adress_id,födelsedatum)
+VALUES ('35', 'Tannaz', 'Larrson','PA1555411', 86, '1990-02-07');
+
+INSERT INTO "användare_konto" (id,lösenord, reg_datum, roll, användareuppgifter_id, email_id)
+VALUES ('32', 'Password32',NOW(),'kund',35,47);
+
+INSERT INTO "adress" (id,gatunamn, gatunummer, postnummer, ort, land, stad)
+VALUES ('86', 'street86', '86', '868686', 'Bromma', 'Sverige','Stockholm');
+
+INSERT INTO "email" (id, mailadress, företagsverksamhet)
+VALUES ('47', 'Tannz123@gmail.com', 'kund');
+
+-- Användare med id 32 har lyckats registrera sig.
+-------------------------------------------------------------------------------
+
+-- 2. Som användare vill jag kunna logga in på mitt konto.
+
+SELECT *
+FROM ( SELECT mailadress, a_k.id AS konto_id,lösenord,
+CASE
+WHEN 'password1' = a_k.lösenord AND 'sustainability@greenplanet.com' =mailadress
+THEN 'Lyckad inloggning'
+ELSE 'Fel mail eller lösenord'
+END as status
+FROM användare_konto a_k
+JOIN email e ON e.id = a_k.email_id
+) AS loggain_resultat
+WHERE status = 'Lyckad inloggning';
+
+-- Resultatet sparas som View (anvandare_inloggad) i datagrip.
+-------------------------------------------------------------------------------
+
+
+--3. Som användare vill jag kunna ändra mina personuppgifter för att hålla informationen uppdaterad.
+
+UPDATE "användare_konto"
+SET lösenord= '1990cool'
+WHERE id = 1;
+
+-- Användare med id 1 har lyckats uppdatera lösenord.
+-------------------------------------------------------------------------------
+
+--4. Som användare vill jag kunna se och ändra mina bokningar.
+
+SELECT id, bokningstid, konto_id, status, antal_person
+FROM bokning
+WHERE bokning.id = 7;
+
+-- Resultatet sparas som View (användare_kan_se_sin_bokning) i datagrip.
+
+UPDATE "bokning"
+SET "speciella_behov" = 'rökfritt'
+WHERE id = 7;
+
+-- Användare med id 7 har lyckats uppdatera sin bokning.
+-------------------------------------------------------------------------------
+
+--5. Som användare vill jag kunna se listor över transportalternativ och deras snitt CO2 och sparas CO2.
+
+SELECT "id", "typ", "snitt_co2_utsläpp", "sparas_co2"
+FROM "transport"
+ORDER BY "sparas_co2" DESC;
+
+-- Resultatet sparas som View (användare_kan_se_lista_över_transportalternativ) i datagrip.
+-------------------------------------------------------------------------------
+
+--7. Som användare vill jag kunna se listor över boenden och deras snitt CO2 och sparas CO2.
+
+SELECT rum.id AS rum_id, rum.snitt_co2_utsläpp, rum.sparas_co2, boende.namn
+FROM rum
+JOIN boende ON rum.boende_id = boende.id
+ORDER BY rum.sparas_co2 DESC;
+
+-- Resultatet sparas som View (användare_kan_se_lista_över_boende) i datagrip.
+-------------------------------------------------------------------------------
+
+--8. Som användare vill jag kunna se aktiviteter som finns i samma ort som mitt boende.
+
+SELECT a.id AS aktivitet_id,
+a.namn AS aktivitet_namn,
+a.beskrivning,
+b.id AS boende_id,
+b.namn AS boende_namn,
+boende_adress.stad AS boende_stad,
+aktivitet_adress.stad AS aktivitet_stad
+FROM aktivitet a
+JOIN adress aktivitet_adress ON a.adress_id = aktivitet_adress.id
+JOIN boende b ON b.adress_id = aktivitet_adress.id
+JOIN adress boende_adress ON b.adress_id = boende_adress.id;
+
+-- Resultatet sparas som View (användare_kan_se_aktiviteter_som_nära_sin_hotell) i datagrip.
+-------------------------------------------------------------------------------
+
+--9. Som användare vill jag kunna boka ett rum.
+
+INSERT INTO bokning (id, bokningstid, konto_id, betalning_id,antal_person, status, speciella_behov)
+VALUES (21, NOW(), 13, 21,1, 'kommande', null);
+
+INSERT INTO bokning_x_boende (id, incheckning, utcheckning, antal_nätter, rum_id, bokning_id, pris)
+VALUES (7, '2024-12-01 14:00:00', '2024-12-05 12:00:00', 4, 24, 21, 5800);
+
+INSERT INTO betalning (id, betalningsstatus, belopp, betalningsmetod, betalningstid)
+VALUES (21,'betald', 5800, 'kort', now());
+
+-- Användaren har lyckats boka ett rum för en person med bokning id 21.
+-------------------------------------------------------------------------------
+
+--10. Som användare vill jag kunna söka efter lediga boenden.
+
+SELECT bo.id AS boende_id, bo.namn AS boende_namn, bo.typ, ad.ort, ad.stad, ad.land, r.id AS rum_id, 
+r.kvm_storlek, r.pris_per_natt, r.beskrivning, r.snitt_co2_utsläpp, r.sparas_co2
+FROM boende bo
+JOIN adress ad ON bo.adress_id = ad.id
+JOIN rum r ON bo.id = r.boende_id
+LEFT JOIN bokning_x_boende bxbo ON r.id = bxbo.rum_id
+WHERE bxbo.bokning_id IS NULL
+ORDER BY ad.land;
+
+-- Resultatet sparas som View (användare_kan_söka_efter_lediga_boende) i datagrip.
+-------------------------------------------------------------------------------
+
+--11. Som användare vill jag kunna söka på transportalternativ från Stockholm till Polen.
+
+SELECT tr.id AS transport_id, tr.typ,tr.avgångstid, tr.ankomsttid, ad1.stad AS avgångsplats, ad2.land AS ankomstplats, tr.pris
+FROM transport tr
+JOIN adress ad1 ON tr.avgångsplats = ad1.id
+JOIN adress ad2 ON tr.ankomstplats = ad2.id
+WHERE ad1.stad = 'Stockholm'
+AND ad2.land = 'Polen';
+
+-- Resultatet sparas som View (användare_söker_transport_från_sthlm_till_polen) i datagrip.
+-------------------------------------------------------------------------------
+
+--12. Som användare vill jag kunna söka på lediga aktiviteter.
+
+SELECT ak.id AS aktivitet_id, ak.namn, ak.typ, ad.stad, ad.land, ak.pris, ak.status, ak.snitt_co2_utsläpp, ak.sparas_co2
+FROM aktivitet ak
+JOIN adress ad ON ak.adress_id = ad.id
+WHERE ak.status = 'aktiv';
+
+-- Resultatet sparas som View (användare_kan_söka_ledgia_aktiviteter) i datagrip.
+-------------------------------------------------------------------------------
+
+--13. Som användare vill jag kunna söka efter transport från Stockholm till Paris med specifika avgångs- och ankomsttider.
+
+SELECT tr.id AS transport_id, tr.typ,tr.avgångstid, tr.ankomsttid, ad1.stad AS avgångsplats, ad2.stad AS ankomstplats,
+tr.pris, tr.snitt_co2_utsläpp, tr.sparas_co2
+FROM transport tr
+JOIN adress ad1 ON tr.avgångsplats = ad1.id
+JOIN adress ad2 ON tr.ankomstplats = ad2.id
+WHERE ad1.stad = 'Stockholm'
+AND ad2.stad = 'Paris'
+AND tr.avgångstid = '2022-11-06 14:30:00'
+AND tr.ankomsttid= '2022-11-06 19:32:00';
+
+-- Resultatet sparas som View (användare_söker_transport_med_avgångtid_och_ankomsttid) i datagrip.
+-------------------------------------------------------------------------------
+
+--14. Som användare vill jag kunna filtrera boenden baserat på pris, land, sparas CO2, lågenergi elektronik, HVAC.
+
+SELECT bo.id AS boende_id, bo.namn AS boende_namn, bo.typ, ad.ort, ad.stad, ad.land, r.id AS rum_id, r.kvm_storlek, 
+r.pris_per_natt, r.beskrivning, r.snitt_co2_utsläpp, r.sparas_co2, fr.lågenergi_elektronik, fr.hvac
+FROM boende bo
+JOIN adress ad ON bo.adress_id = ad.id
+JOIN rum r ON bo.id = r.boende_id
+JOIN rum_x_faciliteter ON r.id = rum_x_faciliteter.rum_id
+JOIN faciliteter_rum fr ON rum_x_faciliteter.fac_rum_id = fr.id
+LEFT JOIN bokning_x_boende bxbo ON r.id = bxbo.rum_id
+WHERE ad.land = 'Polen'
+AND r.pris_per_natt BETWEEN 1000 AND 6000
+AND fr.lågenergi_elektronik = 'True'
+AND fr.hvac = 'true'
+AND bxbo.bokning_id IS NULL
+ORDER BY r.sparas_co2 DESC;
+
+-- Resultatet sparas som View (användare_filtrerar_boende_baserad_på_pris_land_co2_faciliteter) i datagrip.
+-------------------------------------------------------------------------------
+
+--15. Som användare vill jag kunna filtrera lediage boenden baserat på co2.
+SELECT bo.id AS boende_id, bo.namn AS boende_namn, bo.typ, ad.ort, ad.stad, ad.land, r.id AS rum_id, r.pris_per_natt, r.snitt_co2_utsläpp, r.sparas_co2
+FROM boende bo
+JOIN adress ad ON bo.adress_id = ad.id
+JOIN rum r ON bo.id = r.boende_id
+LEFT JOIN bokning_x_boende bxbo ON r.id = bxbo.rum_id
+WHERE bxbo.bokning_id IS NULL
+AND r.sparas_co2 BETWEEN 10 AND 60
+ORDER BY r.sparas_co2 DESC;
+
+-- Resultatet sparas som View (användare_filtrerar_lediga_boende_med_co2) i datagrip.
+-------------------------------------------------------------------------------
+
+--16. Som användare vill jag kunna se  mina kommande bokningar.
+
+SELECT * FROM bokning
+WHERE konto_id = 12
+AND status = 'kommande';
+
+-- Resultatet sparas som View (användare_kan_se_sina_kommande_bokningar) i datagrip.
+-------------------------------------------------------------------------------
+
+--17. Som användare vill jag kunna se aktuella bokningar.
+
+SELECT * FROM bokning
+WHERE status = 'pågående';
+
+-- Resultatet sparas som View (användare_kan_se_aktuella_bokningar) i datagrip.
+-------------------------------------------------------------------------------
+
+--18. Som användare vill jag kunna skicka meddelanden till kundsupport för att få mer information om min bokning.
+
+INSERT INTO meddelanden (id,avsändare, mottagare, meddelande, tid)
+VALUES (
+    10,
+    31,
+    3,
+    'Hej! Jag behöver hjälp med min bokning. Kan ni hjälpa mig?',
+    current_timestamp
+);
+
+-- Användare har lyckats skicka meddelande till kundsupport.
+-------------------------------------------------------------------------------
+
+--19. Som användare vill jag kunna se och lämna recension på bokning som jag har gjort.
+
+SELECT
+    r.bokning_id,
+    r.betyg,
+    r.beskrivning,
+    r.tid,
+    ak.id as konto_id
+FROM recension r
+JOIN användare_konto ak ON r.konto_id = ak.id
+ORDER BY r.tid DESC;
+
+SELECT * FROM visa_recensioner WHERE bokning_id = 21;
+
+INSERT INTO recension (id,bokning_id, konto_id, betyg, beskrivning, tid)
+VALUES
+    (7,21, 13, 4, 'Mycket bra service och punktligt flyg', CURRENT_TIMESTAMP);
+
+-- Resultatet sparas som View (visa_recensioner) i datagrip.
+
+SELECT * FROM visa_recensioner WHERE bokning_id = 21;
+
+-- Ta fram recension av bokning id 21 från VIEW (visa_recensioner).
+
+INSERT INTO recension (id,bokning_id, konto_id, betyg, beskrivning, tid)
+VALUES
+    (7,21, 13, 4, 'Mycket bra service och punktligt flyg', CURRENT_TIMESTAMP);
+
+-- Användare har lyckats lämna recension.
+-------------------------------------------------------------------------------
+
+--20. Som systemadmin vill jag kunna uppdatera/lägga till nya boenden.
+
+UPDATE boende
+SET namn = 'Gröna hotellet'
+WHERE id = 5;
+
+UPDATE adress
+SET ort = 'Lilla Ekoby',
+land = 'Tyskland'
+WHERE id = (SELECT boende.id FROM boende WHERE id = 5);
+
+-- Systemadmin har lyckats uppdatera boende namn och address.
+
+INSERT INTO adress (id, gatunamn, gatunummer, postnummer, ort, land, stad)
+VALUES (86, 'Bokvägen', '12', '12345', 'Stockholm', 'Sverige', 'Stockholm');
+
+INSERT INTO Boende (id,typ, namn, snitt_co2_utsläpp, email_id, adress_id)
+VALUES (21,'hotell', 'Nyttboende1', 100, 40, 86);
+
+-- Systemadmin har lyckats lägga till ny boende.
+-------------------------------------------------------------------------------
+
+--21. Som systemadmin vill jag kunna se  listor och detaljerad information om bokningar så att jag kan hantera och justera systemet.
+
+SELECT id,bokningstid,konto_id,status FROM bokning;
+
+-- Resultatet sparas som View (systemadmin_kan_se_lista_av_bokningar) i datagrip.
+
+SELECT b.id AS bokning_id,förnamn,efternamn,
+bokningstid,
+antal_person,status,speciella_behov,
+betalningsstatus,belopp,betalningsmetod,betalningstid
+FROM bokning b
+JOIN användare_konto ak ON b.konto_id = ak.id
+JOIN användareuppgifter a on a.id = ak.användareuppgifter_id
+JOIN betalning bm on bm.id = b.betalning_id;
+
+-- Resultatet sparas som View (systemadmin_kan_se_detaljerad_info_om_bokningar) i datagrip.
+
+UPDATE bokning
+SET status = 'pågående'
+WHERE id = 17;
+
+-- Systemadmin har lyckats justera bokning med id 17.
+
+-------------------------------------------------------------------------------
+
+--22. Som kundsupport vill jag kunna kontakta resenärer för att ge information om deras bokningar, till exempel vid förseningar.
+
+SELECT b.id AS bokningsid,förnamn,efternamn,ak.id,email_id,mailadress
+FROM användareuppgifter
+JOIN användare_konto ak on användareuppgifter.id = ak.användareuppgifter_id
+JOIN bokning b on ak.id = b.konto_id
+JOIN email e on e.id = ak.email_id;
+
+-- Resultatet sparas som View (personuppgifter_kopplad_till_bokningsid) i datagrip.
+
+INSERT INTO meddelanden (id,avsändare,meddelande,mottagare,tid)
+VALUES (12,16, 'Hej, vi behöver prata om din bokning med id 19',12,NOW());
+
+-- Kundsupport har lyckats kontakta användare.
+
+-------------------------------------------------------------------------------
+
+--23. Som systemadmin vill jag kunna se  listor och detaljerad information om kommande transporter så att jag kan hantera och justera systemet.
+
+SELECT
+t.id,t.typ,t.pris,t.snitt_co2_utsläpp,t.sparas_co2,
+avg_a.gatunamn AS avg_gatunamn,avg_a.gatunummer AS avg_gatunummer,
+avg_a.land AS avg_land,
+ank_a.gatunamn AS ankomst_gatunamn,
+ank_a.gatunummer AS ankomst_gatunummer,ank_a.ort AS ankomst_ort,
+ank_a.land AS ankomst_land,
+bxt.avgångstid,
+bxt.ankomsttid
+FROM transport AS t
+JOIN bokning_x_transport AS bxt ON t.id = bxt.transport_id
+JOIN adress AS avg_a ON t.avgångsplats = avg_a.id
+JOIN adress AS ank_a ON t.ankomstplats = ank_a.id
+WHERE bxt.avgångstid >= NOW();
+
+-- Resultatet sparas som View (systemadmin_kan_se_listor_om_kommande_transporter_med_detaljerad_info) i datagrip.
+
+
+UPDATE transport
+SET sparas_co2 = '38'
+WHERE id = 6;
+
+-- Systemadmin har lyckats uppdatera sparas CO2 till transport med id 6.
+
+UPDATE adress
+SET gatunamn = 'Nyadress123'
+WHERE id = (SELECT avgångsplats FROM transport WHERE id = 6);
+
+-- Systemadmin har lyckats uppdatera address till transport med id 6.
