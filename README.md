@@ -31,7 +31,7 @@ Följande filer finns inkluderade i GitHub-repot:
 - **ER Diagram.png**
 - **Wireframe.png**
 - **User Stories Med Queries.txt**
-- **DDD Planering.png**
+- **DDD_Planering.png**
 - **Databas_Med_ockdata_Och_VIEWS** (mockdata för testning)
 
 ## Installation och körning
