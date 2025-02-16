@@ -27,17 +27,17 @@ Projektet fokuserar på att utveckla en grön resebokningsapplikation, där anv�
     
 ## Innehåll i projektet
 Följande filer finns inkluderade i GitHub-repot:
-- **BDD Scenarios.pdf**
-- **ER Diagram.png**
+- **BDD_Scenarios.pdf**
+- **ER_Diagram.png**
 - **Wireframe.png**
-- **User Stories Med Queries.txt**
+- **User_Stories_Med_Queries.txt**
 - **DDD_Planering.png**
 - **Databas_Med_ockdata_Och_VIEWS** (mockdata för testning)
 
 ## Installation och körning
 1. Klona detta repository:git clone https://github.com/JohanTran94/Miljovanliga-Milstolpar.git
 2. Installera PostgreSQL om det inte redan finns.
-3. Importera mockdata `Databas_Med__Mockdata_Och_VIEWS`-filen.
+3. Importera mockdata `Databas_Med_Mockdata_Och_VIEWS`-filen.
 4. Använd DataGrip för att ansluta och hantera databasen.
 
 ## Kontakt
