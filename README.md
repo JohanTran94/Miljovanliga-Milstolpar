@@ -37,7 +37,7 @@ Följande filer finns inkluderade i GitHub-repot:
 ## Installation och körning
 1. Klona detta repository:git clone https://github.com/JohanTran94/Miljovanliga-Milstolpar.git
 2. Installera PostgreSQL om det inte redan finns.
-3. Importera mockdata från `Databas_Med__Mockdata_Och_VIEWS`-filen.
+3. Importera mockdata `Databas_Med__Mockdata_Och_VIEWS`-filen.
 4. Använd DataGrip för att ansluta och hantera databasen.
 
 ## Kontakt
